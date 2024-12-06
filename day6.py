@@ -20,25 +20,27 @@ def onmap(pos):
     return False
 
 # read input
-with open("test6.txt","r") as f:
+with open("input6.txt","r") as f:
   map = f.read().strip().split("\n")
   numlines = len(map)
 
-linelen = len(map[0])+1
+linelen = len(map[0])
 for i in range(len(map)):
   map[i] = [ c for c in map[i] ]
 # index as map[vertical][horizontal]
 
-position= (-1,-1)
+sposition= (-1,-1)
 # find starting position and direction
 # store coordinates as (horizontal,vertical)
 for i in range(len(map)):
   for j in range(len(map[i])):
     if map[i][j] == "^":
-      position = (j,i)
+      sposition = (j,i)
 
-direction = "up" # given
-visited = set([position])
+position = sposition
+sdirection = "up" # given
+direction = sdirection
+visited = set([sposition])
 
 # implement movement
 for ntries in range(10000): # prevent infinite loop
@@ -52,14 +54,42 @@ for ntries in range(10000): # prevent infinite loop
       position = newpos
       visited.add(position)
   else:
-    print("Leaving map")
+    # print("Leaving map")
     break
 
 print("Part 1: visited",len(visited),"unique locations")
 
-# part 2 
-# to add new obstacle, can just modify map 
-# try running same code passing in different maps 
-# to detect loop: if position is already in visited,
-# AND direction is the same, we are in a loop
-# -> need to store direction in visited
+totalp2 = 0
+for i in range(len(map)):
+  for j in range(len(map[i])):
+    if map[i][j]!=".":
+      continue
+    # edit map
+    map[i][j] = "#"
+    # reset to start
+    position = sposition
+    direction = sdirection
+    visitedp2 = set([(sposition,sdirection)])
+    for ntries in range(10000): # prevent infinite loop
+      newpos = forward(direction,position)
+      if onmap(newpos):
+        if map[newpos[1]][newpos[0]]=="#":
+          # obstacle
+          direction = turn(direction)
+        else:
+          # move forward
+          position = newpos
+          if (position,direction) in visitedp2:
+            # infinite loop
+            totalp2 += 1
+            # print("Found infinite loop, current count is",totalp2)
+            # undo change to map
+            map[i][j] = "."
+            break
+          visitedp2.add((position,direction))
+      else:
+        # undo change to map
+        map[i][j] = "."
+        break
+
+print("Part 2: number of looping positions is",totalp2)
